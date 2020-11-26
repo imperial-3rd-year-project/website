@@ -2,7 +2,16 @@
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 .button {
   border-radius: 100px;
+  background-color: red;
 }
+
+h1 { font-size: 4.2rem; }
+
+/* Larger than phablet */
+@media (min-width: 550px) {
+  h1 { font-size: 8.0rem; }
+}
+
 
 /* Sections
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
@@ -15,55 +24,89 @@
   margin-bottom: 1.2rem;
 }
 
-/* Hero
+/* Introduction
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
-.phones {
-  position: relative;
-}
-.phone {
-  position: relative;
-  max-width: 80%;
-  margin: 3rem auto -12rem;
-}
-.phone + .phone {
-  display: none;
-}
-
-/* Values
-–––––––––––––––––––––––––––––––––––––––––––––––––– */
-.values {
-  background-image: url('../images/values-bg.jpg');
+.introduction {
+  background-image: url('../images/triangles-1430105.svg');
   background-size: cover;
-  color: #fff;
+  color: #cff5bb;
   padding-bottom: 5rem;
 }
-.value-multiplier {
+
+.introduction-multiplier {
   margin-bottom: .5rem;
   color: #11DFC7;
 }
-.value-heading {
+
+.introduction-heading {
   margin-bottom: .3rem;
 }
-.value-description {
+.introduction-description {
   opacity: .8;
   font-weight: 300;
 }
 
-/* Help
+
+/* Get-started
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
-.get-help {
-  border-bottom: 1px solid #ddd;
+.get-started {
+  background-color: #eedaff;
+  color: #000000;
+  padding-bottom: 5rem;
 }
 
-/* Categories
-–––––––––––––––––––––––––––––––––––––––––––––––––– */
-.categories {
-  background-image: url('../images/values-bg.jpg');
-  background-size: cover;
-  color: #fff;
+.get-started-multiplier {
+  margin-bottom: .5rem;
+  color: #11DFC7;
 }
-.categories .section-description { 
-  margin-bottom: 4rem;
+
+.get-started-heading {
+  margin-bottom: .3rem;
+}
+.get-started-description {
+  opacity: .8;
+  font-weight: 300;
+}
+
+/* About
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.about {
+  background-image: url('../images/purple-370132.png');
+  background-size: cover;
+  color: #ffffff;
+  padding-bottom: 5rem;
+}
+.about-multiplier {
+  margin-bottom: .5rem;
+  color: #11DFC7;
+}
+.about-heading {
+  margin-bottom: .3rem;
+}
+.about-description {
+  opacity: .8;
+  font-weight: 300;
+}
+
+/* Advantages
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.benefits {
+  background-color: #eedaff;
+  color: #000000;
+  padding-bottom: 5rem;
+}
+
+.benefits-multiplier {
+  margin-bottom: .5rem;
+  color: #11DFC7;
+}
+
+.benefits-heading {
+  margin-bottom: .3rem;
+}
+.benefits-description {
+  opacity: .8;
+  font-weight: 300;
 }
 
 /* Bigger than 550 */
@@ -71,61 +114,34 @@
   .section {
     padding: 12rem 0 11rem;
   }
-  .hero {
+  .introduction {
     padding-bottom: 12rem;
     text-align: left;
     height: 165px;
   }
-  .phone {
-    position: absolute;
-    top: -7rem;
-    right: 3rem;
-    max-height: 362px;
-    z-index: 3;
-  }
-  .phone + .phone {
-    top: -6rem;
-    display: block;
-    max-width: 73.8%;
-    right: 0;
-    z-index: 2;
-    max-height: 338px;
-  }
-  .hero-heading {
+  .introduction-heading {
     font-size: 2.4rem;
   }
 }
 
 /* Bigger than 750 */
 @media (min-width: 750px) {
-  .hero {
+  .introduction {
     height: 190px;
   }
-  .hero-heading {
+  .introduction-heading {
     font-size: 2.6rem;
   }
   .section {
     padding: 14rem 0 15rem;
   }
-  .hero {
+  .introduction {
     padding: 16rem 0 14rem;
   }
   .section-description {
     max-width: 60%;
     margin-left: auto;
     margin-right: auto;
-  }
-  .phone {
-    top: -14rem;
-    right: 5rem;
-    max-height: 510px;
-  }
-  .phone + .phone {
-    top: -12rem;
-    max-height: 472px;
-  }
-  .categories {
-    padding: 15rem 0 8rem;
   }
 }
 
@@ -134,18 +150,10 @@
   .section {
     padding: 20rem 0 19rem;
   }
-  .hero {
+  .introduction {
     padding: 22rem 0;
   }
-  .hero-heading {
+  .introduction-heading {
     font-size: 3.0rem;
-  }
-  .phone {
-    top: -16rem;
-    max-height: 615px;
-  }
-  .phone + .phone {
-    top: -14rem;
-    max-height: 570px;
   }
 }
