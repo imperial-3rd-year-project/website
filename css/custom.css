@@ -24,6 +24,10 @@ h1 { font-size: 4.2rem; }
   margin-bottom: 1.2rem;
 }
 
+.section-code {
+  text-align: left;
+}
+
 /* Introduction
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 .introduction {
@@ -46,6 +50,49 @@ h1 { font-size: 4.2rem; }
   font-weight: 300;
 }
 
+/* What-is-grenade
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.what-is-grenade {
+  background-color: #eedaff;
+  color: #000000;
+  padding-bottom: 5rem;
+}
+
+.what-is-grenade-multiplier {
+  margin-bottom: .5rem;
+  color: #11DFC7;
+}
+
+.what-is-grenade-heading {
+  margin-bottom: .3rem;
+}
+.what-is-grenade-description {
+  opacity: .8;
+  font-weight: 300;
+}
+
+
+/* Why-have-types
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.why-have-types {
+  background-image: url('../images/purple-370132.png');
+  background-size: cover;
+  color: #ffffff;
+  padding-bottom: 5rem;
+}
+
+.why-have-types-multiplier {
+  margin-bottom: .5rem;
+  color: #11DFC7;
+}
+
+.why-have-types-heading {
+  margin-bottom: .3rem;
+}
+.why-have-types-description {
+  opacity: .8;
+  font-weight: 300;
+}
 
 /* Get-started
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
