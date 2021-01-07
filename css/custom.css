@@ -28,12 +28,16 @@ h1 { font-size: 4.2rem; }
   text-align: left;
 }
 
+.text {
+  padding: 5rem 0 2rem;
+}
+
 /* Introduction
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 .introduction {
-  background-image: url('../images/triangles-1430105.svg');
+  background-image: url('../images/pawel-czerwinski-sXmKcDoHKsI-unsplash.jpg');
   background-size: cover;
-  color: #cff5bb;
+  color: #ffffff;
   padding-bottom: 5rem;
 }
 
@@ -155,6 +159,15 @@ h1 { font-size: 4.2rem; }
   opacity: .8;
   font-weight: 300;
 }
+
+.tutorial {
+  background-image: url('../images/pawel-czerwinski-VWVO0g9A3rg-unsplash.jpg');
+  background-size: cover;
+  color: #ffffff;
+  padding-bottom: 5rem;
+}
+
+
 
 /* Bigger than 550 */
 @media (min-width: 550px) {
