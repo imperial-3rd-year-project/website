@@ -167,6 +167,14 @@ h1 { font-size: 4.2rem; }
   padding-bottom: 5rem;
 }
 
+.tutorial-header {
+  background-image: url('../images/pawel-czerwinski-YO1WPCUtvR4-unsplash.jpg');
+  background-size: cover;
+  color: #ffffff;
+  padding-top: 20rem;
+  padding-bottom: 20rem;
+}
+
 
 
 /* Bigger than 550 */

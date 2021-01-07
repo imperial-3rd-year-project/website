@@ -36,7 +36,7 @@
 
   <!-- Primary Page Layout
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-  <div class="text introduction">
+  <div class="text tutorial-header">
     <div class="container">
       <div class="row">
         <div class="twelve columns">
@@ -155,7 +155,7 @@ matrix2d = fromJust $ fromStorable vector
         for example if the image is a drawing of the number three, then it would be 3. The rest of the row are the 
         784 pixels of the image, in row order. But we begin by simply opening the file and sepereating the rows of data,
         lets use the <code>Text</code> data type, since this is a very big file, and using Strings would definitely 
-        case space leaks.
+        cause space leaks.
       </p>
       <pre>
 import qualified Data.Text             as T
@@ -370,7 +370,8 @@ trainMNIST allData = trainData validateData ?? ?? ??
           default options 
         </a>
         to use. Let's use these, except we will want to increase the batch size since a larger batch size will 
-        reduce computational intensity and improve gradient descent. We also want to decide what metrics to 
+        reduce computational intensity (since you perform less parameter updates per epoch) and 
+        improve gradient descent (since averaging the gradients makes them "smoother"). We also want to decide what metrics to 
         run the validation set with, since this is a classification task, let's use crossentropy.
         Let's change the default options to take this into account, we will use Adam since it tends to perform
         better on minibatch training.
@@ -385,7 +386,7 @@ trainMNIST allData = trainData validateData options ?? ??
       </pre>
       <p>
         Finally, we need to prove the number of epochs to train for, and the loss function to use 
-        for back propogation. 15 epochs is a good amount and since the fit function keeps 
+        for back propagation. 15 epochs is a good amount and since the fit function keeps 
         track of the best model so far, there is less risk of overfitting to the data. Finally,
         we have a range of 
         <a href="https://g206002126.pages.doc.ic.ac.uk/grenade/master/docs/Grenade-Core-Loss.html">
