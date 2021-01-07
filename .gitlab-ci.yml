@@ -1,0 +1,15 @@
+stages:
+  - pages
+
+pages:
+  stage: pages
+  rules:
+    - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
+      when: manual
+  script:
+    - mkdir .public
+    - cp -r ./* .public
+    - mv .public public
+  artifacts:
+    paths:
+      - public
