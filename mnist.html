@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <!-- Basic Page Needs
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta charset="utf-8">
+  <title>MNIST in Grenade</title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!-- Mobile Specific Metas
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- FONT
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link href='//fonts.googleapis.com/css?family=Raleway:400,300,600' rel='stylesheet' type='text/css'>
+
+  <!-- CSS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/skeleton.css">
+  <link rel="stylesheet" href="css/custom.css">
+
+  <!-- Scripts
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+  <!-- Favicon
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="icon" type="image/svg" href="images/haskell-logo.svg">
+
+</head>
+<body>
+
+  <!-- Primary Page Layout
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <div class="text tutorial-header">
+    <div class="container">
+      <div class="row">
+        <div class="twelve columns">
+          <h1>Handwritten Digit Recognition with Grenade</h1>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text tutorial_page">
+    <div class="container">
+      <h3>
+        Setting everything up
+      </h3>
+      <p>
+        To get started, let's initialise our MNIST project. In a clean directory, create a folder for this project, then run 
+        <code>cabal init</code>. In order to add Grenade as a dependency, we will link cabal to the github repo,
+        create a new file called <code>cabal.project</code> in our project folder, and add the following code:
+      </p>
+      <pre>
+packages: .
+
+source-repository-package
+    type: git
+    location: https://gitlab.doc.ic.ac.uk/g206002126/grenade
+    tag: d203e4f8a62e7d658f8104f57f55298bd7faa23b
+      </pre>
+      <p>
+        You also need to add a few dependencies to the <code>build-depends</code> for your 
+        executable in your <code>.cabal</code> file. Add the folowing:
+      </p>
+      <pre>
+build-depends:       base >=4.14 && &lt;4.15
+                   , grenade
+                   , hmatrix
+                   , attoparsec
+                   , vector
+                   , text
+                   , bytestring
+                   , cereal
+      </pre>
+      <p>
+        Also, just so we do not have to worry about during the tutorial, let's add all of our 
+        imports and extensions now to our <code>.hs</code>, their uses will become clear as 
+        we work our way through the tutorial.
+      </p>
+      <pre>
+import qualified Data.Attoparsec.Text as A
+import qualified Data.ByteString      as B
+import           Data.Maybe           (fromJust)
+import           Data.Serialize
+import qualified Data.Text            as T
+import qualified Data.Text.IO         as T
+import qualified Data.Vector.Storable as V
+
+import           Grenade              hiding (MNIST)
+      </pre>
+      <p>
+        If you run <code>cabal run</code>,
+        it should build Grenade. It may take a while to clone and build, the first time you run it.
+        Now we are ready to get started!
+      </p>
+    </div>
+  </div>
+
+  <div class="text tutorial_page">
+    <div class="container">
+      <h3>
+        Preprocessing the Data
+      </h3>
+      <p>
+        Like any neural network task, half the task lies in processing the data. Since we're using Haskell to
+        do our neural network task, we have access to all of the amazing libraries that Haskell provides to 
+        us - for example, we can use parser combinators to parse our data! Let's download the MNIST dataset 
+        from <a href="https://www.kaggle.com/oddrationale/mnist-in-csv">this kaggle post</a>. We will only use 
+        the <code>mnist-train.csv</code> file. 
+      </p>
+      <p>
+        Let's start by parsing this, but before we can do that, we need to understand exactly what we are parsing
+        it into. Grenade uses 
+        <a href="https://g206002126.pages.doc.ic.ac.uk/grenade/master/docs/Grenade-Core-Shape.html">statically typed shapes</a>
+        to encode the shape of its matrices at type level. For example, suppose that <code>mat</code> is a 2d matrix 
+        with height and width 28, then its type would be <code>S ('D2 28 28)</code>, where <code>D{n}</code> represents
+        an n-dimensional shape. Alternatively, if <code>img</code> is a 3d matrix with height 128, width 256 and
+        3 channels (for example RGB), then its type would be <code>S ('D3 3 128 256)</code>. By doing this,
+        Grenade avoids a lot of shape errors by catching any mismatches at compile time. For example, it
+        is impossible to reshape of 12x6 matrix into a 6x6 matrix, since the number of elements does not match 
+        - a program that tries this will give a compilation error.
+      </p>
+      <p>
+        The underlying representation of matrices in Grenade is using HMatrix, particular the 
+        <a href="https://hackage.haskell.org/package/hmatrix-0.20.1/docs/Numeric-LinearAlgebra-Static.html">static library</a>,
+        a two dimension matrix in Grenade is represented by a 
+        <a href="https://hackage.haskell.org/package/hmatrix-0.20.1/docs/Numeric-LinearAlgebra-Static.html#t:L">static matrix</a> whose rows 
+        and columns match those of the type. Grenade proved the helper function 
+        <a href="https://g206002126.pages.doc.ic.ac.uk/grenade/master/docs/Grenade-Core-Shape.html#v:fromStorable">fromStorable</a>
+        which will construct a matrix wrapped in a <code>Maybe</code> from a storable vector (which represents the flattened matrix in row order).
+        For example. let's construct a 28x28 2d matrix in Grenade:
+      </p>
+      <pre>
+{-# LANGUAGE DataKinds #-}
+import qualified Data.Vector.Storable       as V
+
+matrix2d :: S ('D2 28 28)
+matrix2d = fromJust $ fromStorable vector
+  where 
+    vector = V.fromList [1..28*28]
+      </pre>
+      <p>
+        One thing to note is that in order to be able to use natural numbers at type level, it is essential to
+        activate the <code>-XDataKinds</code> language extension. 
+      </p>
+      <p>
+        Now we can begin by parsing our csv data into our Grenade matrices. The structure of the csv file is as follows:
+        each row represents an image, the first item in each row is the label, which represents the value of the digit,
+        for example if the image is a drawing of the number three, then it would be 3. The rest of the row are the 
+        784 pixels of the image, in row order. But we begin by simply opening the file and sepereating the rows of data,
+        lets use the <code>Text</code> data type, since this is a very big file, and using Strings would definitely 
+        cause space leaks.
+      </p>
+      <pre>
+import qualified Data.Text             as T
+import qualified Data.Text.IO          as T
+
+readMNIST :: FilePath -> IO [T.Text]
+readMNIST path = do 
+  mnist <- T.readFile path 
+  return . tail $ T.lines mnist
+      </pre>
+      <p>
+        Note that we take the tail of the lines, since the first line is just the headings of the file which 
+        we are not concerned with.
+      </p>
+      <p>
+        Now we define the process to parse the data, we will use attoparsec - but we won't get bogged down in the 
+        details of parsing too much. 
+        Of course, in a neural network, it is not as easy as 
+        just reading the file as it currently is, we need to do some preprocessing: the two things we will do 
+        are <a href="https://en.wikipedia.org/wiki/One-hot">one hot encode</a> the label to a vector of length 10, and 
+        <a href="https://machinelearningmastery.com/how-to-improve-neural-network-stability-and-modeling-performance-with-data-scaling/">normalize the 
+        pixel data to be between 0 and 1</a> (the pixels represent a black and white image, so they are currently
+        between 0 and 255). The row parser returns a tuple containing the input data, and the correct output 
+        data, which is exactly what we will need to train our neural network.
+      </p>
+      <pre>
+{-# LANGUAGE DataKinds #-}
+import qualified Data.Attoparsec.Text as A
+import qualified Data.Vector.Storable as V
+
+parseMNIST :: FilePath -> IO [(S ('D2 28 28), S ('D1 10))]
+parseMNIST path = do
+  mnistdata <- readMNIST path
+  let parsedData' = traverse (A.parseOnly parseMNIST) mnistdata
+  case parsedData' of 
+    Left  err        -> error err 
+    Right parsedData -> return parsedData
+        
+parseRow :: A.Parser (S ('D2 28 28), S ('D1 10))
+parseRow = do
+  lab    <- oneHot <$> A.decimal            -- parse a list of 
+  pixels <- many (A.char ',' >> A.double)
+  image  <- fromStorable . V.fromList $ map realToFrac ((/ 255) <$> pixels)
+
+  case image of 
+    Nothing  -> error "Parsed image was not of correct size"
+    Just img -> return (img, lab)
+
+oneHot :: Int -> S ('D1 10)
+oneHot n = fromJust . fromStorable . V.fromList $ [if x == n then 1 else 0 | x <- [0..9]]
+      </pre>
+      <p>
+        Thats all we need to parse our data! We've got it into a form that we're ready to parse 
+        our Haskell neural network library. To test it, lets use the utility function 
+        <a href="https://g206002126.pages.doc.ic.ac.uk/grenade/master/docs/Grenade-Core-Shape.html#v:visualise2D">defined in Grenade</a>
+      </p>
+      <pre>
+visualise2D :: S ('D2 a b) -> RealNum -> String
+      </pre>
+      <p>
+        where the second argument is the maximum value of a pixel, in this case 1. So for sanity check, let's see 
+        what are data looks like
+      </p>
+      <pre>
+main = do 
+  mnist <- parseMNIST path-to-file
+  let randomInput = fst $ mnist !! 2
+  putStrLn $ visualise2D randomInput 1
+      </pre>
+      <p>
+        If we run this, we get the following
+      </p>
+      <pre>   
+                            
+        .#      
+        ..              -=      
+        -=              -#      
+        #=              #=      
+        #=             =#-      
+        #=             =#.      
+       -#=             ##       
+       =#-            =##       
+       =#.          .=##.       
+       =#.     ---###=##        
+       -#########=-.  ##        
+        -=====..     .##        
+                     =#-        
+                     =#.        
+                     =#.        
+                     =#.        
+                     =#.        
+                     =#-        
+                     =#-        
+                     .#-        
+                                    
+      </pre>
+      <p>
+        Its the number four! This is what our data looks like, now its just a matter of training a neural network 
+        to identify it!
+      </p>
+    </div>
+  </div>
+
+  <div class="text tutorial_page">
+    <div class="container">
+      <h3>
+        Creating our neural network
+      </h3>
+      <p>
+        Now that we've got the data into a good format, we can actually define our neural network!
+        The definition of a neural network is surprising simple!
+      </p>
+      <pre>
+data Network :: [Type] -> [Shape] -> * where
+NNil  :: SingI i
+      => Network '[] '[i]
+
+(:~>) :: (SingI i, SingI h, Layer x i h)
+      => !x
+      -> !(Network xs (h ': hs))
+      -> Network (x ': xs) (i ': h ': hs)
+      </pre>
+      <p>
+        The <code>Layer x i h</code> constraint ensures that the layer <code>x</code> can perform on input 
+        data of shape <code>i</code> to create output data of shape <code>o</code>. The lifted data kind 
+        <code>Shape</code> defines our 1, 2, and 3 dimension types, used to
+        declare what shape of data is passed between the layers.
+      </p>
+      <p>
+        For this exercise, I will provide an example network, but you have freedom to create whatever neural 
+        network you like! To define a neural network in Haskell, we simply just define its type! Grenade 
+        will take care of everything else for us.
+      </p>
+      <p>
+        To see all of the layers available, check out the 
+        <a href="https://g206002126.pages.doc.ic.ac.uk/grenade/master/docs/Grenade-Layers.html">Grenade Layer Zoo</a>.
+        The types of some layer of interest are
+      </p>
+      <pre>
+Convolution 'WithoutBias 'NoPadding channels filters kernelWidth kernelHeight strideWidth strideHeight
+Pooling kernelWidth kernelHeight strideWidth strideHeight
+-- ^ the last four arguments are type level Nats
+FullyConnected i o
+-- ^ i represents the number of input neurons, and o the output neurons
+Reshape
+Relu
+Logit
+-- ^ logit is a softmax activation
+      </pre>
+      <p>
+        With this layers, we can create a complete neural network, all at the type level! 
+      </p>
+      <pre>
+type MNIST
+  = Network
+    '[ Convolution 'WithoutBias 'NoPadding 1 10 5 5 1 1
+    , Pooling 2 2 2 2                                   , Relu
+    , Convolution 'WithoutBias 'NoPadding 10 16 5 5 1 1
+    , Pooling 2 2 2 2                                   , Relu
+    , Reshape
+    , FullyConnected 256 80                             , Logit
+    , FullyConnected 80 10                              , Logit
+    ]
+    '[ 'D2 28 28                   -- input size
+    , 'D3 24 24 10                -- convolution
+    , 'D3 12 12 10, 'D3 12 12 10  -- pooling, relu 
+    , 'D3 8 8 16                  -- convolution
+    , 'D3 4 4 16  , 'D3 4 4 16    -- pooling, relu
+    , 'D1 256                     -- reshape 
+    , 'D1 80      , 'D1 80        -- fully connected, logit  
+    , 'D1 10      , 'D1 10        -- fully connected, logit
+    ]
+      </pre>
+      <p>
+        This is quite a classic convolutional neural network for working with MNIST. all thats left now is to 
+        train it!
+      </p>
+    </div>
+  </div>
+
+  <div class="text tutorial_page">
+    <div class="container">
+      <h3>
+        Training the neural network
+      </h3>
+      <p>
+        Currently, our neural network exists just at type level, with no concrete term level representation. 
+        We need to demote it to term level in order to give each of the layers weights so that we can run 
+        inferences though it, there are two ways to do this - firstly, we can create a random network with 
+        that type, for example 
+      </p>
+      <pre>
+main = do 
+  net <- randomNet :: IO MNIST
+      </pre>
+      <p>
+        This will automatically create a term level network with the correct structure, as dictated by the type.
+        The other, more convinient way, is to create a trained network via the 
+        <a href="https://g206002126.pages.doc.ic.ac.uk/grenade/master/docs/Grenade-Core-Training.html#v:fit">fit function</a>.
+        Let's work through the arguments one by one. Firstly we need to provide it with training and validation data,
+        to do this, let's use split the data from the csv file with approximately 80% of it being for training, and 20% of 
+        it being for validation. We can do this quite simiply:
+      </p>
+      <pre>
+trainMNIST :: [(S ('D2 28 28), S ('D1 10))] -> IO MNIST
+trainMNIST allData = trainData validateData ?? ?? ??
+  where (trainData, validateData) = splitAt 33000 allData
+      </pre>
+      <p>
+        The next argument is the training options, fortunately, Grenade provides some 
+        <a href="https://g206002126.pages.doc.ic.ac.uk/grenade/master/docs/Grenade-Core-TrainingTypes.html#v:defaultAdamOptions">
+          default options 
+        </a>
+        to use. Let's use these, except we will want to increase the batch size since a larger batch size will 
+        reduce computational intensity (since you perform less parameter updates per epoch) and 
+        improve gradient descent (since averaging the gradients makes them "smoother"). We also want to decide what metrics to 
+        run the validation set with, since this is a classification task, let's use crossentropy.
+        Let's change the default options to take this into account, we will use Adam since it tends to perform
+        better on minibatch training.
+      </p>
+      <pre>
+trainMNIST :: [(S ('D2 28 28), S ('D1 10))] -> IO MNIST
+trainMNIST allData = trainData validateData options ?? ??
+  where 
+    (trainData, validateData) = splitAt 33000 allData
+    options                   = defaultAdamOptions { batchSize = 32
+                                                   , metrics   = [CrossEntropy] }          
+      </pre>
+      <p>
+        Finally, we need to prove the number of epochs to train for, and the loss function to use 
+        for back propagation. 15 epochs is a good amount and since the fit function keeps 
+        track of the best model so far, there is less risk of overfitting to the data. Finally,
+        we have a range of 
+        <a href="https://g206002126.pages.doc.ic.ac.uk/grenade/master/docs/Grenade-Core-Loss.html">
+          loss functions
+        </a> to choose from, the best here will be crossentropy.
+      </p>
+      <pre>
+trainMNIST :: [(S ('D2 28 28), S ('D1 10))] -> IO MNIST
+trainMNIST allData = trainData validateData options 15 crossEntropy'
+  where 
+    (trainData, validateData) = splitAt 33000 allData
+    options                   = defaultAdamOptions { batchSize = 32
+                                                    , metrics   = [CrossEntropy] }   
+      </pre>
+      <p>
+        We have everything we need to train our network now!
+      </p>
+    </div>
+  </div>
+
+  <div class="text tutorial_page">
+    <div class="container">
+      <h3>
+        Running the training
+      </h3>
+      <p>
+        This is actually the easiest step! We just have to combine all of our work into one program.
+      </p>
+      <pre>
+main = do 
+  mnistData <- parseMNIST path-to-mnist-csv
+  net       <- trainMNIST mnistData
+
+  B.writeFile "mnist.grenade" $ runPut (put net)
+      </pre>
+      <p>
+        The final line saves the network using Grenade's serialization protocol. You can now load 
+        your trained network for use in the future, for example, in 
+        <a href="https://gitlab.doc.ic.ac.uk/g206002126/grenade/-/blob/master/examples/main/mnist-load.hs">
+          our interactive MNIST 
+        canvas demo 
+        </a>
+      </p>
+      <p>
+        We train the network with full verbosity, so you should see the training bar showing the process of 
+        each epoch. The loss should decrease every epoch, indicating that the network is learning! 
+        Once you have run this, you have just trained your first neural network in Grenade!
+      </p>
+    </div>
+  </div>
+
+  <div class="text tutorial_page">
+    <div class="container">
+      <h3>
+        Taking things further
+      </h3>
+      <p>
+        This tutorial is just a trailer of what is possible with Grenade - to see more, download 
+        our demos application to try popular neural networks such as Tiny Yolo V2, Resnet18 and 
+        SuperResolution 10, as well as being able to try out an MNIST network that was trained 
+        with Grenade! 
+      </p>
+      <a href="https://gitlab.doc.ic.ac.uk/g206002126/webapp">
+        Click here to be taken to the demos applications
+        </a>
+      </p>
+    </div>
+  </div>
+
+<!-- End Document
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+</body>
+</html>
