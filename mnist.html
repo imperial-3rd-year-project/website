@@ -319,7 +319,7 @@ type MNIST
     , FullyConnected 256 80                             , Logit
     , FullyConnected 80 10                              , Logit
     ]
-    '[ 'D2 28 28                   -- input size
+    '[ 'D2 28 28                  -- input size
     , 'D3 24 24 10                -- convolution
     , 'D3 12 12 10, 'D3 12 12 10  -- pooling, relu 
     , 'D3 8 8 16                  -- convolution
@@ -349,7 +349,7 @@ type MNIST
       </p>
       <pre>
 main = do 
-  net <- randomNet :: IO MNIST
+  net <- randomNetwork :: IO MNIST
       </pre>
       <p>
         This will automatically create a term level network with the correct structure, as dictated by the type.
@@ -361,8 +361,9 @@ main = do
       </p>
       <pre>
 trainMNIST :: [(S ('D2 28 28), S ('D1 10))] -> IO MNIST
-trainMNIST allData = trainData validateData ?? ?? ??
-  where (trainData, validateData) = splitAt 33000 allData
+trainMNIST allData = fit trainData validateData ?? ?? ??
+  where
+    (trainData, validateData) = splitAt 33000 allData
       </pre>
       <p>
         The next argument is the training options, fortunately, Grenade provides some 
@@ -378,7 +379,7 @@ trainMNIST allData = trainData validateData ?? ?? ??
       </p>
       <pre>
 trainMNIST :: [(S ('D2 28 28), S ('D1 10))] -> IO MNIST
-trainMNIST allData = trainData validateData options ?? ??
+trainMNIST allData = fit trainData validateData options ?? ??
   where 
     (trainData, validateData) = splitAt 33000 allData
     options                   = defaultAdamOptions { batchSize = 32
@@ -395,11 +396,11 @@ trainMNIST allData = trainData validateData options ?? ??
       </p>
       <pre>
 trainMNIST :: [(S ('D2 28 28), S ('D1 10))] -> IO MNIST
-trainMNIST allData = trainData validateData options 15 crossEntropy'
+trainMNIST allData = fit trainData validateData options 15 crossEntropy'
   where 
     (trainData, validateData) = splitAt 33000 allData
     options                   = defaultAdamOptions { batchSize = 32
-                                                    , metrics   = [CrossEntropy] }   
+                                                   , metrics   = [CrossEntropy] }   
       </pre>
       <p>
         We have everything we need to train our network now!
@@ -410,15 +411,40 @@ trainMNIST allData = trainData validateData options 15 crossEntropy'
   <div class="text tutorial_page">
     <div class="container">
       <h3>
-        Running the training
+        Running the network
       </h3>
       <p>
-        This is actually the easiest step! We just have to combine all of our work into one program.
+        Now that we have trained our neural network, we should test whether or not it can recognise
+        digits as intended. At this point, it's helpful to know what form the output of the network
+        is in. Looking at the last shape of the network type, we find it to be a vector containing
+        10 elements. The 0th entry in the vector will correspond to the probability the number is a
+        0, the 1st entry to the probability for 1, and so on. Hence, all the postprocessing needed
+        consists of finding the index of the highest probability score. We do this with the
+        following code
+      </p>
+      <pre>
+postprocessMNIST :: S ('D1 10) -> String
+postprocessMNIST (S1D vec) = "This number is " ++ show i ++ " with probability " ++ show (p * 100) ++ "%."
+  where
+    (p, i) = maximumBy (comparing fst) $ zip (V.toList vec) [0..]
+      </pre>
+      <p>
+        With this, we can now use the function
+        <a href="https://g206002126.pages.doc.ic.ac.uk/grenade/master/docs/Grenade-Core-Network.html#v:runNetwork">
+        runNetwork</a> which takes as input the network to run along with the input data. This function will return
+        two values inside a tuple; the first value is used in the training of networks, so we can safely ignore it
+        here. Putting this all together, our main function ends up looking like
       </p>
       <pre>
 main = do 
   mnistData <- parseMNIST path-to-mnist-csv
   net       <- trainMNIST mnistData
+
+  let randomInput = fst $ mnist !! 2
+  putStrLn $ visualise2D randomInput 1
+
+  let output = runNetwork net randomInput
+  putStrLn $ postprocessMNIST output
 
   B.writeFile "mnist.grenade" $ runPut (put net)
       </pre>
