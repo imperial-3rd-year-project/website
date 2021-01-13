@@ -12,7 +12,6 @@ h1 { font-size: 4.2rem; }
   h1 { font-size: 8.0rem; }
 }
 
-
 /* Sections
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 .section {
@@ -31,6 +30,10 @@ h1 { font-size: 4.2rem; }
 .text {
   padding: 5rem 0 2rem;
 }
+
+/*div {*/
+/*    font-size: 4.2rem;*/
+/*}*/
 
 /* Introduction
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
@@ -96,6 +99,12 @@ h1 { font-size: 4.2rem; }
 .why-have-types-description {
   opacity: .8;
   font-weight: 300;
+}
+
+.warning {
+  background-image: url('../images/warning.png');
+  background-repeat: no-repeat;
+  background-size: contain;
 }
 
 /* Get-started
@@ -244,3 +253,4 @@ h1 { font-size: 4.2rem; }
     font-size: 3.0rem;
   }
 }
+
