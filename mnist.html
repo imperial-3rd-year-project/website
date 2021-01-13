@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="css/normalize.css">
   <link rel="stylesheet" href="css/skeleton.css">
   <link rel="stylesheet" href="css/custom.css">
+  <link rel="stylesheet" href="css/prism.css">
 
   <!-- Scripts
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -33,9 +34,9 @@
 
 </head>
 <body>
-
-  <!-- Primary Page Layout
-  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <script src="prism.js"></script>
+<!-- Primary Page Layout
+–––––––––––––––––––––––––––––––––––––––––––––––––– -->
   <div class="text tutorial-header">
     <div class="container">
       <div class="row">
@@ -57,18 +58,21 @@
         create a new file called <code>cabal.project</code> in our project folder, and add the following code:
       </p>
       <pre>
+        <code class="language-haskell" style="font-size: 1.6rem">
 packages: .
 
 source-repository-package
     type: git
     location: https://gitlab.doc.ic.ac.uk/g206002126/grenade
     tag: d203e4f8a62e7d658f8104f57f55298bd7faa23b
+        </code>
       </pre>
       <p>
         You also need to add a few dependencies to the <code>build-depends</code> for your 
         executable in your <code>.cabal</code> file. Add the folowing:
       </p>
       <pre>
+        <code class="language-haskell" style="font-size: 1.6rem">
 build-depends:       base >=4.14 && &lt;4.15
                    , grenade
                    , hmatrix
@@ -77,6 +81,7 @@ build-depends:       base >=4.14 && &lt;4.15
                    , text
                    , bytestring
                    , cereal
+        </code>
       </pre>
       <p>
         Also, just so we do not have to worry about during the tutorial, let's add all of our 
@@ -84,6 +89,7 @@ build-depends:       base >=4.14 && &lt;4.15
         we work our way through the tutorial.
       </p>
       <pre>
+        <code class="language-haskell" style="font-size: 1.6rem">
 import qualified Data.Attoparsec.Text as A
 import qualified Data.ByteString      as B
 import           Data.Maybe           (fromJust)
@@ -93,6 +99,7 @@ import qualified Data.Text.IO         as T
 import qualified Data.Vector.Storable as V
 
 import           Grenade              hiding (MNIST)
+        </code>
       </pre>
       <p>
         If you run <code>cabal run</code>,
@@ -137,6 +144,7 @@ import           Grenade              hiding (MNIST)
         For example. let's construct a 28x28 2d matrix in Grenade:
       </p>
       <pre>
+        <code class="language-haskell" style="font-size: 1.6rem">
 {-# LANGUAGE DataKinds #-}
 import qualified Data.Vector.Storable       as V
 
@@ -144,6 +152,7 @@ matrix2d :: S ('D2 28 28)
 matrix2d = fromJust $ fromStorable vector
   where 
     vector = V.fromList [1..28*28]
+        </code>
       </pre>
       <p>
         One thing to note is that in order to be able to use natural numbers at type level, it is essential to
@@ -158,6 +167,7 @@ matrix2d = fromJust $ fromStorable vector
         cause space leaks.
       </p>
       <pre>
+        <code class="language-haskell" style="font-size: 1.6rem">
 import qualified Data.Text             as T
 import qualified Data.Text.IO          as T
 
@@ -165,6 +175,7 @@ readMNIST :: FilePath -> IO [T.Text]
 readMNIST path = do 
   mnist <- T.readFile path 
   return . tail $ T.lines mnist
+        </code>
       </pre>
       <p>
         Note that we take the tail of the lines, since the first line is just the headings of the file which 
@@ -182,6 +193,7 @@ readMNIST path = do
         data, which is exactly what we will need to train our neural network.
       </p>
       <pre>
+        <code class="language-haskell" style="font-size: 1.6rem">
 {-# LANGUAGE DataKinds #-}
 import qualified Data.Attoparsec.Text as A
 import qualified Data.Vector.Storable as V
@@ -206,6 +218,7 @@ parseRow = do
 
 oneHot :: Int -> S ('D1 10)
 oneHot n = fromJust . fromStorable . V.fromList $ [if x == n then 1 else 0 | x <- [0..9]]
+        </code>
       </pre>
       <p>
         Thats all we need to parse our data! We've got it into a form that we're ready to parse 
@@ -213,23 +226,28 @@ oneHot n = fromJust . fromStorable . V.fromList $ [if x == n then 1 else 0 | x <
         <a href="https://g206002126.pages.doc.ic.ac.uk/grenade/master/docs/Grenade-Core-Shape.html#v:visualise2D">defined in Grenade</a>
       </p>
       <pre>
+        <code class="language-haskell" style="font-size: 1.6rem">
 visualise2D :: S ('D2 a b) -> RealNum -> String
+        </code>
       </pre>
       <p>
         where the second argument is the maximum value of a pixel, in this case 1. So for sanity check, let's see 
         what are data looks like
       </p>
       <pre>
-main = do 
+        <code class="language-haskell" style="font-size: 1.6rem">
+main = do
   mnist <- parseMNIST path-to-file
   let randomInput = fst $ mnist !! 2
   putStrLn $ visualise2D randomInput 1
+        </code>
       </pre>
       <p>
         If we run this, we get the following
       </p>
       <pre>   
-                            
+        <code class="language-haskell" style="font-size: 1.6rem">
+
         .#      
         ..              -=      
         -=              -#      
@@ -250,7 +268,8 @@ main = do
                      =#-        
                      =#-        
                      .#-        
-                                    
+
+        </code>
       </pre>
       <p>
         Its the number four! This is what our data looks like, now its just a matter of training a neural network 
@@ -269,6 +288,7 @@ main = do
         The definition of a neural network is surprising simple!
       </p>
       <pre>
+        <code class="language-haskell" style="font-size: 1.6rem">
 data Network :: [Type] -> [Shape] -> * where
 NNil  :: SingI i
       => Network '[] '[i]
@@ -277,6 +297,7 @@ NNil  :: SingI i
       => !x
       -> !(Network xs (h ': hs))
       -> Network (x ': xs) (i ': h ': hs)
+        </code>
       </pre>
       <p>
         The <code>Layer x i h</code> constraint ensures that the layer <code>x</code> can perform on input 
@@ -295,6 +316,7 @@ NNil  :: SingI i
         The types of some layer of interest are
       </p>
       <pre>
+        <code class="language-haskell" style="font-size: 1.6rem">
 Convolution 'WithoutBias 'NoPadding channels filters kernelWidth kernelHeight strideWidth strideHeight
 Pooling kernelWidth kernelHeight strideWidth strideHeight
 -- ^ the last four arguments are type level Nats
@@ -304,11 +326,13 @@ Reshape
 Relu
 Logit
 -- ^ logit is a softmax activation
+        </code>
       </pre>
       <p>
         With this layers, we can create a complete neural network, all at the type level! 
       </p>
       <pre>
+        <code class="language-haskell" style="font-size: 1.6rem">
 type MNIST
   = Network
     '[ Convolution 'WithoutBias 'NoPadding 1 10 5 5 1 1
@@ -328,6 +352,7 @@ type MNIST
     , 'D1 80      , 'D1 80        -- fully connected, logit  
     , 'D1 10      , 'D1 10        -- fully connected, logit
     ]
+        </code>
       </pre>
       <p>
         This is quite a classic convolutional neural network for working with MNIST. all thats left now is to 
@@ -348,8 +373,10 @@ type MNIST
         that type, for example 
       </p>
       <pre>
-main = do 
+        <code class="language-haskell" style="font-size: 1.6rem">
+main = do
   net <- randomNetwork :: IO MNIST
+        </code>
       </pre>
       <p>
         This will automatically create a term level network with the correct structure, as dictated by the type.
@@ -360,10 +387,12 @@ main = do
         it being for validation. We can do this quite simiply:
       </p>
       <pre>
+        <code class="language-haskell" style="font-size: 1.6rem">
 trainMNIST :: [(S ('D2 28 28), S ('D1 10))] -> IO MNIST
 trainMNIST allData = fit trainData validateData ?? ?? ??
   where
     (trainData, validateData) = splitAt 33000 allData
+        </code>
       </pre>
       <p>
         The next argument is the training options, fortunately, Grenade provides some 
@@ -378,12 +407,14 @@ trainMNIST allData = fit trainData validateData ?? ?? ??
         better on minibatch training.
       </p>
       <pre>
+        <code class="language-haskell" style="font-size: 1.6rem">
 trainMNIST :: [(S ('D2 28 28), S ('D1 10))] -> IO MNIST
 trainMNIST allData = fit trainData validateData options ?? ??
   where 
     (trainData, validateData) = splitAt 33000 allData
     options                   = defaultAdamOptions { batchSize = 32
-                                                   , metrics   = [CrossEntropy] }          
+                                                   , metrics   = [CrossEntropy] }
+        </code>
       </pre>
       <p>
         Finally, we need to prove the number of epochs to train for, and the loss function to use 
@@ -395,12 +426,14 @@ trainMNIST allData = fit trainData validateData options ?? ??
         </a> to choose from, the best here will be crossentropy.
       </p>
       <pre>
+        <code class="language-haskell" style="font-size: 1.6rem">
 trainMNIST :: [(S ('D2 28 28), S ('D1 10))] -> IO MNIST
 trainMNIST allData = fit trainData validateData options 15 crossEntropy'
   where 
     (trainData, validateData) = splitAt 33000 allData
     options                   = defaultAdamOptions { batchSize = 32
-                                                   , metrics   = [CrossEntropy] }   
+                                                   , metrics   = [CrossEntropy] }
+        </code>
       </pre>
       <p>
         We have everything we need to train our network now!
@@ -423,10 +456,12 @@ trainMNIST allData = fit trainData validateData options 15 crossEntropy'
         following code
       </p>
       <pre>
+        <code class="language-haskell" style="font-size: 1.6rem">
 postprocessMNIST :: S ('D1 10) -> String
 postprocessMNIST (S1D vec) = "This number is " ++ show i ++ " with probability " ++ show (p * 100) ++ "%."
   where
     (p, i) = maximumBy (comparing fst) $ zip (V.toList vec) [0..]
+        </code>
       </pre>
       <p>
         With this, we can now use the function
@@ -436,7 +471,8 @@ postprocessMNIST (S1D vec) = "This number is " ++ show i ++ " with probability "
         here. Putting this all together, our main function ends up looking like
       </p>
       <pre>
-main = do 
+        <code class="language-haskell" style="font-size: 1.6rem">
+main = do
   mnistData <- parseMNIST path-to-mnist-csv
   net       <- trainMNIST mnistData
 
@@ -447,6 +483,7 @@ main = do
   putStrLn $ postprocessMNIST output
 
   B.writeFile "mnist.grenade" $ runPut (put net)
+        </code>
       </pre>
       <p>
         The final line saves the network using Grenade's serialization protocol. You can now load 
