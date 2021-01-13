@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="css/normalize.css">
   <link rel="stylesheet" href="css/skeleton.css">
   <link rel="stylesheet" href="css/custom.css">
+  <link rel="stylesheet" href="css/custom_index.css">
 
   <!-- Scripts
   –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -55,10 +56,14 @@
 
   <div class="section what-is-grenade">
     <div class="container">
-      <h3 class="section-heading">What is Grenade?</h3>
-      <p class="section-description">Grenade brings composable, statically typed neural networks to Haskell. In particular, this means that networks are defined as types, with shapes checked at compile time, and networks can be used as layers in other networks. For example, we can define a simple network as follows:</p>
+      <h2 class="section-heading">What is Grenade?</h2>
+      <h4 class="hero-heading">
+        Grenade brings composable, statically typed neural networks to Haskell. In particular, this means that networks are defined as types, with shapes checked at compile time, and networks can be used as layers in other networks. For example, we can define a simple network as follows:
+      </h4>
       <pre>type FL i o = Network '[ FullyConnected i o, Logit ] '[ 'D1 i, 'D1 o, 'D1 o]</pre>
-      <p class="section-description">and use it within a more complex network:</p>
+      <h4 class="hero-heading">
+        and use it within a more complex network:
+      </h4>
       <pre>type Net = Network '[ FL 288 80, FL 80 10 ] '[ D1 288, 'D1 80, 'D1 10 ] </pre>
     </div>
   </div>
@@ -68,62 +73,62 @@
       <div class="row">
         <h3 class="section-heading">Why have types?</h3>
       </div>
+      <div class="row" style="justify-content: center; display: flex;">
+        <h4 class="hero-heading">
+          Here are two attempts at writing a simple neural network gone wrong
+          in the same way in both Grenade and PyTorch:
+        </h4>
+      </div>
       <div class="row">
         <div class="six columns">
           <pre class="section-code">
-  type MyNetwork = Network
-  '[ Convolution 1 32 4 4 1 1, Relu
-  , Pooling 2 2 2 2
-  , Convolution 1 16 4 4 1 1, Relu
-  , Pooling 2 2 2 2
-  , Reshape
-  , FullyConnected 2704 10,   Relu
-  , FullyConnected 10 1,      Logit ]
-  '[ 'D2 64 64                  -- Input
-  , 'D3 61 61 32, 'D3 61 61 32  -- Convolution, Relu
-  , 'D3 30 30 32                -- Pooling
-  , 'D3 27 27 16, 'D3 27 27 16  -- Convolution, Relu
-  , 'D3 26 26 16                -- Pooling
-  , 'D1 10816,                  -- Reshape
-  , 'D1 10,       'D1 10        -- FullyConnected, Relu
-  , 'D1 1,        'D1 1 ]       -- FullyConnected, Logit 
+type ExampleNetwork
+  = Network
+    '[ FullyConnected 256 128 ]
+    '[ 'D1 256, 'D1 128       ]
+ main = do
+  network    <- randomNetwork :: IO ExampleNetwork
+  randomData <- randomOfShape :: IO (S ('D1 257))
+  print $ runNet network randomData
           </pre>
         </div>
         <div class="six columns">
           <pre class="section-code">
-  visible = Input(shape=(64,64,1))
-  conv1 = Conv2D(32, kernel_size=4, activation='relu')(visible)
-  pool1 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(conv1)
-  conv2 = Conv2D(16, kernel_size=4, activation='relu')(pool1)
-  pool2 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(conv2)
-  flat = Flatten()(pool2)
-  hidden1 = Dense(10, activation='relu')(flat)
-  output = Dense(1, activation='sigmoid')(hidden1)
-  model = Model(inputs=visible, outputs=output)
+linear_layer = torch.nn.Linear(256, 128)
+random_data = torch.rand(257)
+print(linear_layer(random_data))
           </pre>
         </div>
       </div>
       <div class="row" style="justify-content: center; display: flex;">
-        <p style="max-width: 60%;"> 
-          Unfortunately, there is an issue here: in both networks, we have incorrectly set the 
-          strides parameter of the second pooling layer to (2, 2), when in fact it should have 
-          been set to (1, 1)! Such an error could occur, for example, if the programmer copy-pasted 
-          the definition of the first layer and forgot to change the parameter, and indeed in Python 
-          such an error will never be flagged to the user as we have created a fully acceptable, albeit 
-          undesired, network. On the other hand, running the network written in Grenade will return an 
-          error at compile time: the layers we have used do not transform the shapes as specified. Notice 
-          that with strides set to (2, 2), the output shape of the layer would actually be 'D3 13 13 16, 
-          but here we have asserted it to be 'D3 26 26 16.
-        </p>
+        <h4 class="hero-heading">
+          The FullyConnected/linear layer takes in a vector of length 256 in both cases.
+          The programmer has made a typo and accidentally gave it a vector with 257 elements.
+          Both programs should and do not work. The difference is that Grenade will detect an error
+          before even running the program. PyTorch detects an error when it specifically tries to
+          multiply the mismatching matrices.
+        </h4>
+      </div>
+      <div class="row" style="justify-content: space-between; display: flex;">
+        <div class="one column warning">
+        </div>
+        <div class="eight columns">
+          <h4 class="hero-heading">
+            The Pytorch's runtime error in the shown example would be detected almost instantly.
+            However, in a practical neural neural network detecting this error can take a lot of time.
+          </h4>
+        </div>
+        <div class="one column warning">
+        </div>
       </div>
     </div>
   </div>
 
   <div class="section get-started">
     <div class="container">
-      <h3 class="section-heading">Need help getting started?</h3>
-      <p class="section-description">We have created a demo web app with tutorials ranging from most basic ones to showcases of famous neural network implementations.</p>
-      <a class="button button-primary" style="background-color: rebeccapurple" href="./demo.html">See Grenade in practice</a>
+      <h3 class="hero-heading">Need help getting started?</h3>
+      <h4 class="hero-heading">We have created a demo web app with tutorials ranging from most basic ones to showcases of famous neural network implementations.</h4>
+      <h4 class="button button-primary" style="background-color: rebeccapurple" href="./demo.html">See Grenade in practice</h4>
     </div>
   </div>
 
@@ -150,22 +155,24 @@
   </div>
 
   <div class="section benefits">
-    <div class="container">
+    <div class="container" style="max-width: 80%">
       <div class="row">
         <div class="one-third column">
-          <img class="u-max-full-width" src="images/shape-box.svg">
-          <h4>Easy to use</h4>
-          <p>The API was developed with programmer experience in mind. It easily allows utilization of Haskell's seamless function composition</p>
+          <img style="max-width: 60%" src="images/shape-box.svg">
+          <h3>Easy to use</h3>
+          <h5 class="hero-heading">
+              The API was developed with programmer experience in mind. It easily allows utilization of Haskell's seamless function composition.
+          </h5>
         </div>
         <div class="one-third column">
-          <img class="u-max-full-width" src="images/check-mark-1292787.svg">
-          <h4>Catch errors early</h4>
-          <p>The strong type system of this framework stops you from declaring neural networks with mismatching dimensions at compile time.</p>
+          <img style="max-width: 60%" src="images/check-mark-1292787.svg">
+          <h3>Catch errors early</h3>
+          <h5 class="hero-heading">The strong type system of this framework stops you from declaring neural networks with mismatching dimensions at compile time.</h5>
         </div>
         <div class="one-third column">
-          <img style="margin-top: 2rem" class="u-max-full-width" src="images/GitLab_Logo.png">
-          <h4>Open source</h4>
-          <p>The code is available for anyone to see and modify. This also aids development by allowing other programmers to contribute to the current codebase.</p>
+          <img style="max-width: 60%; margin-top: 2rem" class="u-max-full-width" src="images/GitLab_Logo.png">
+          <h3>Open source</h3>
+          <h5 class="hero-heading">The code is available for anyone to see and modify. This also aids development by allowing other programmers to contribute to the current codebase.</h5>
         </div>
       </div>
     </div>
@@ -179,11 +186,11 @@
         </h3>
       </div>
       <div class="row">
-        <p>
-          Do you want to try out Grenade to create and train your own neural network? Click the button below 
+        <h4 class="hero-heading">
+          Do you want to try out Grenade to create and train your own neural network? Click the button below
           to check out our tutorial that will lead you through the process of setting up Grenade, and building 
           a neural network to classify handwritten digits by training it on the MNIST dataset.
-        </p>
+        </h4>
       </div>
       <div class="row">
         <a class="button button-primary" style="background-color: red" href="./mnist.html">
